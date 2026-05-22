@@ -14956,9 +14956,17 @@
         }
 
         // ─── Tier Overview Tabs ───
-        function switchTierTab(industry) {
+        function switchTierTab(industry, syncFilter) {
             document.querySelectorAll('.tier-tab').forEach(t => t.classList.toggle('active', t.dataset.industry === industry));
             document.querySelectorAll('.tier-panel').forEach(p => p.classList.toggle('active', p.dataset.industry === industry));
+            // 当用户主动点击品类概览 tab 时（syncFilter 非 false），联动行业筛选器
+            if (syncFilter !== false) {
+                const indFilter = document.getElementById('industryFilter');
+                if (indFilter && indFilter.value !== industry) {
+                    indFilter.value = industry;
+                    applyFilters();
+                }
+            }
         }
 
         // ─── Filters ───
@@ -15016,9 +15024,9 @@
             document.getElementById('visibleCount').textContent = visible;
             document.getElementById('noResults').classList.toggle('visible', visible === 0);
 
-            // Also switch tier overview
+            // Also switch tier overview (syncFilter=false 避免循环触发)
             if (indVal !== 'all') {
-                switchTierTab(indVal);
+                switchTierTab(indVal, false);
             }
         }
 
