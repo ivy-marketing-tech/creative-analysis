@@ -21955,6 +21955,18 @@ body {
         return `${lo}%-${Math.max(hi, lo + 1)}%`;
     }
     function normTypes(card) { return (card.getAttribute('data-types') || '').split(',').map(t => t.trim()).filter(Boolean); }
+    function scrollToFilteredMaterials() {
+        window.clearTimeout(window.__materialScrollTimer);
+        window.__materialScrollTimer = window.setTimeout(() => {
+            const target = document.querySelector('#cardsContainer .card:not(.hidden):not(.duplicate-hidden)')
+                || document.querySelector('#imageCardsGrid .card:not(.hidden):not(.duplicate-hidden)')
+                || document.querySelector('#cardsContainer .gallery-section:not(.hidden):not(.duplicate-hidden)')
+                || document.getElementById('noResults')
+                || document.getElementById('cardsContainer');
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 120);
+    }
+    window.scrollToFilteredMaterials = scrollToFilteredMaterials;
     function isBaseCard(card, ignoreCat=false, ignoreType=false) {
         const dateVal = getVal('dateFilter');
         const indVal = getVal('industryFilter');
@@ -22508,6 +22520,7 @@ body {
                     const cat = card.dataset.category;
                     if (sel) sel.value = (sel.value === cat ? 'all' : cat);
                     if (typeof applyFilters === 'function') applyFilters();
+                    window.scrollToFilteredMaterials?.();
                 });
             });
         });
@@ -22778,6 +22791,7 @@ body {
                 const t = card.dataset.type;
                 if (sel) sel.value = (sel.value === t ? 'all' : t);
                 if (typeof window.applyFilters === 'function') window.applyFilters();
+                window.scrollToFilteredMaterials?.();
             });
         });
     }
@@ -22800,5 +22814,17 @@ body {
 })();
 </script>
 
+<!-- OVERVIEW_SCROLL_FIX_20260724 -->
+<script>
+(function(){
+    if (window.__overviewScrollFixBound) return;
+    window.__overviewScrollFixBound = true;
+    document.addEventListener('click', e => {
+        const card = e.target.closest?.('.tier-card, .type-rank-card');
+        if (!card || card.classList.contains('disabled-filter')) return;
+        window.setTimeout(() => window.scrollToFilteredMaterials?.(), 0);
+    });
+})();
+</script>
 </body>
 </html>
