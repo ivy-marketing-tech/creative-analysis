@@ -21958,13 +21958,36 @@ body {
     function scrollToFilteredMaterials() {
         window.clearTimeout(window.__materialScrollTimer);
         window.__materialScrollTimer = window.setTimeout(() => {
-            const target = document.querySelector('#cardsContainer .card:not(.hidden):not(.duplicate-hidden)')
-                || document.querySelector('#imageCardsGrid .card:not(.hidden):not(.duplicate-hidden)')
-                || document.querySelector('#cardsContainer .gallery-section:not(.hidden):not(.duplicate-hidden)')
-                || document.getElementById('noResults')
-                || document.getElementById('cardsContainer');
+            const dateVal = getVal('dateFilter');
+            const indVal = getVal('industryFilter');
+            const catVal = getVal('categoryFilter');
+            const typeVal = getVal('typeFilter');
+            const audVal = getVal('audienceFilter');
+            const formVal = getVal('creativeFormFilter', 'video');
+            const matches = el => {
+                const cf = el.getAttribute('data-form') || 'video';
+                const types = (el.getAttribute('data-types') || '').split(',').map(t => t.trim()).filter(Boolean);
+                const auds = (el.getAttribute('data-audiences') || '').split(',').map(t => t.trim()).filter(Boolean);
+                if (formVal !== 'all' && cf !== formVal) return false;
+                if (dateVal !== 'all' && el.dataset.date !== dateVal) return false;
+                if (indVal !== 'all' && el.dataset.industry !== indVal) return false;
+                if (catVal !== 'all' && el.dataset.category !== catVal) return false;
+                if (typeVal !== 'all' && !types.includes(typeVal)) return false;
+                if (audVal !== 'all' && !auds.includes(audVal)) return false;
+                return true;
+            };
+            const candidates = [...document.querySelectorAll('#cardsContainer .card, #imageCardsGrid .card')];
+            let target = candidates.find(el => !el.classList.contains('hidden') && !el.classList.contains('duplicate-hidden') && matches(el));
+            if (!target && typeVal === 'all' && audVal === 'all' && formVal !== 'image') {
+                target = [...document.querySelectorAll('#cardsContainer .gallery-section')]
+                    .find(el => !el.classList.contains('hidden') && !el.classList.contains('duplicate-hidden')
+                        && (dateVal === 'all' || el.dataset.date === dateVal)
+                        && (indVal === 'all' || el.dataset.industry === indVal)
+                        && (catVal === 'all' || el.dataset.category === catVal));
+            }
+            target = target || document.getElementById('noResults') || document.getElementById('cardsContainer');
             if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 120);
+        }, 180);
     }
     window.scrollToFilteredMaterials = scrollToFilteredMaterials;
     function isBaseCard(card, ignoreCat=false, ignoreType=false) {
@@ -22026,7 +22049,7 @@ body {
         root.querySelectorAll('.tier-card').forEach(card => {
             const nameEl = card.querySelector('.tier-card-name');
             const badge = nameEl?.querySelector('.tier-badge-small')?.textContent || '';
-            const cat = (nameEl?.textContent || '').replace(badge, '').trim();
+            const cat = card.dataset.category || (nameEl?.textContent || '').replace(badge, '').trim();
             card.dataset.category = cat;
             card.title = `筛选 ${cat} 类目`;
             card.addEventListener('click', () => {
@@ -22034,6 +22057,7 @@ body {
                 const sel = document.getElementById('categoryFilter');
                 if (sel) sel.value = (sel.value === cat ? 'all' : cat);
                 applyFilters();
+                scrollToFilteredMaterials();
             });
         });
     }
@@ -22082,6 +22106,7 @@ body {
                 const sel = document.getElementById('typeFilter');
                 if (sel) sel.value = (sel.value === t ? 'all' : t);
                 applyFilters();
+                scrollToFilteredMaterials();
             });
         });
     }
@@ -22819,11 +22844,73 @@ body {
 (function(){
     if (window.__overviewScrollFixBound) return;
     window.__overviewScrollFixBound = true;
+
+    function getTierCategory(card) {
+        if (card.dataset.category) return card.dataset.category.trim();
+        const nameEl = card.querySelector('.tier-card-name');
+        const clone = nameEl ? nameEl.cloneNode(true) : card.cloneNode(true);
+        clone.querySelectorAll('.tier-badge-small').forEach(el => el.remove());
+        return (clone.textContent || '').trim();
+    }
+    function ensureOption(sel, val) {
+        if (!sel || !val || val === 'all') return;
+        if (![...sel.options].some(opt => opt.value === val)) {
+            sel.appendChild(new Option(val, val));
+        }
+    }
+    function exactScroll({category, type}) {
+        window.setTimeout(() => {
+            const dateVal = document.getElementById('dateFilter')?.value || 'all';
+            const indVal = document.getElementById('industryFilter')?.value || 'all';
+            const formVal = document.getElementById('creativeFormFilter')?.value || 'video';
+            const candidates = [...document.querySelectorAll('#cardsContainer .card, #imageCardsGrid .card')];
+            const target = candidates.find(el => {
+                if (el.classList.contains('hidden') || el.classList.contains('duplicate-hidden')) return false;
+                if (dateVal !== 'all' && el.dataset.date !== dateVal) return false;
+                if (indVal !== 'all' && el.dataset.industry !== indVal) return false;
+                if (formVal !== 'all' && (el.dataset.form || 'video') !== formVal) return false;
+                if (category && category !== 'all' && el.dataset.category !== category) return false;
+                if (type && type !== 'all') {
+                    const types = (el.dataset.types || '').split(',').map(t => t.trim()).filter(Boolean);
+                    if (!types.includes(type)) return false;
+                }
+                return true;
+            }) || document.getElementById('noResults') || document.getElementById('cardsContainer');
+            target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 260);
+    }
+
     document.addEventListener('click', e => {
-        const card = e.target.closest?.('.tier-card, .type-rank-card');
+        const tierCard = e.target.closest?.('.overview-category-box .tier-card');
+        const typeCard = e.target.closest?.('.overview-type-box .type-rank-card');
+        const card = tierCard || typeCard;
         if (!card || card.classList.contains('disabled-filter')) return;
-        window.setTimeout(() => window.scrollToFilteredMaterials?.(), 0);
-    });
+
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        const catSel = document.getElementById('categoryFilter');
+        const typeSel = document.getElementById('typeFilter');
+        let targetCategory = catSel?.value || 'all';
+        let targetType = typeSel?.value || 'all';
+
+        if (tierCard) {
+            const cat = getTierCategory(tierCard);
+            ensureOption(catSel, cat);
+            targetCategory = catSel.value === cat ? 'all' : cat;
+            if (catSel) catSel.value = targetCategory;
+        }
+        if (typeCard) {
+            const type = typeCard.dataset.type || '';
+            ensureOption(typeSel, type);
+            targetType = typeSel.value === type ? 'all' : type;
+            if (typeSel) typeSel.value = targetType;
+        }
+
+        window.applyFilters?.();
+        exactScroll({ category: targetCategory, type: targetType });
+    }, true);
 })();
 </script>
 </body>
