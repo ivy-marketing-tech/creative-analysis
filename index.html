@@ -30256,7 +30256,7 @@ body {
     transition: all .22s ease;
     position:relative;
     overflow:hidden;
-    min-height:104px;
+    min-height:132px;
 }
 .industry-choice-card::before {
     content:''; position:absolute; inset:auto -25% -45% auto; width:150px; height:150px;
@@ -30280,6 +30280,9 @@ body {
 .industry-choice-name { font-size:22px; font-weight:900; color:#19352f; display:flex; align-items:center; gap:8px; margin-bottom:8px; position:relative; }
 .industry-choice-meta { font-size:12px; color:#5f7770; display:flex; gap:10px; flex-wrap:wrap; position:relative; }
 .industry-choice-meta b { color:#1f9e75; }
+.industry-compare-bad { color:#d93025; font-weight:800; }
+.industry-compare-good { color:#1f9e75; font-weight:800; }
+.industry-summary-bad { color:#d93025; font-weight:800; }
 .industry-choice-card[data-industry="茶叶"]::before { background:rgba(126,190,88,.13); }
 .industry-choice-card[data-industry="酒水"]::before { background:rgba(89,169,218,.13); }
 .industry-choice-card[data-industry="酒水"].active { border-color:#57a6d8; box-shadow:0 16px 36px rgba(87,166,216,.16); }
@@ -30289,26 +30292,31 @@ body {
 .overview-category-box .tier-tabs { display:none !important; }
 .overview-category-box { min-height: 0; }
 .overview-category-box .tier-panel.active { display:block; }
-@media (max-width: 760px) { .industry-switcher-grid { grid-template-columns:1fr; } .industry-choice-card { min-height:88px; } }
+@media (max-width: 760px) { .industry-switcher-grid { grid-template-columns:1fr; } .industry-choice-card { min-height:118px; } }
 </style>
 <script>
 (function(){
     const INDUSTRY_META = {
-        '生鲜': {emoji:'🥩', desc:'鲜食肉禽 · 海参水产 · 时令生鲜'},
-        '茶叶': {emoji:'🍵', desc:'养生茶 · 普洱白茶 · 花果茶'},
-        '酒水': {emoji:'🍷', desc:'白酒 · 葡萄酒 · 洋酒'}
+        '生鲜': {
+            emoji:'🥩',
+            desc:'鲜食肉禽、海参水产、时令生鲜',
+            metrics:'耐看性指标均值：平均播放时长约 6~10 秒（对比食品大盘<span class="industry-compare-bad">短2秒</span>）；3 秒快滑率约 52%~58%（对比食品大盘<span class="industry-compare-bad">高约2.6个百分点</span>）',
+            summary:'<span class="industry-summary-bad">先降快滑</span>'
+        },
+        '茶叶': {
+            emoji:'🍵',
+            desc:'养生茶、普洱白茶、花果茶',
+            metrics:'耐看性指标均值：平均播放时长约 6~10 秒（对比食品大盘<span class="industry-compare-bad">短2秒</span>）；3 秒快滑率约 56%~62%（对比食品大盘<span class="industry-compare-bad">高约6.5个百分点</span>）',
+            summary:'<span class="industry-summary-bad">先降快滑</span>'
+        },
+        '酒水': {
+            emoji:'🍷',
+            desc:'白酒、葡萄酒、洋酒',
+            metrics:'耐看性指标均值：平均播放时长约 6~11 秒（对比食品大盘<span class="industry-compare-bad">短1秒</span>）；3 秒快滑率约 48%~54%（对比食品大盘<span class="industry-compare-good">低约1.3个百分点</span>）',
+            summary:'<span class="industry-summary-bad">先补时长</span>'
+        }
     };
     function getVal(id, fallback='all') { return document.getElementById(id)?.value || fallback; }
-    function latestDate() {
-        const vals = [...document.querySelectorAll('#dateFilter option')].map(o => o.value).filter(v => v !== 'all').sort();
-        return vals[vals.length - 1] || 'all';
-    }
-    function statFor(industry) {
-        const date = getVal('dateFilter', latestDate());
-        const cards = [...document.querySelectorAll('.card')].filter(c => c.dataset.industry === industry && (date === 'all' || c.dataset.date === date));
-        const cats = new Set(cards.map(c => c.dataset.category).filter(Boolean));
-        return {deep: cards.length, cats: cats.size};
-    }
     function ensureIndustrySwitcher() {
         if (document.getElementById('industrySwitcher')) return;
         const filterBar = document.querySelector('.filter-bar');
@@ -30328,12 +30336,12 @@ body {
         if (!grid) return;
         const active = getVal('industryFilter', '生鲜');
         grid.innerHTML = ['生鲜','茶叶','酒水'].map(ind => {
-            const st = statFor(ind);
             const meta = INDUSTRY_META[ind];
             return `<div class="industry-choice-card ${active === ind ? 'active' : ''}" data-industry="${ind}" title="查看${ind}行业">
                 <div class="industry-choice-name"><span>${meta.emoji}</span>${ind}</div>
-                <div class="industry-choice-meta"><span><b>${st.cats}</b> 个品类</span><span><b>${st.deep}</b> 条深析素材</span></div>
-                <div class="industry-choice-meta" style="margin-top:6px">${meta.desc}</div>
+                <div class="industry-choice-meta" style="margin-top:6px; display:block; line-height:1.6">${meta.desc}</div>
+                <div class="industry-choice-meta" style="margin-top:4px; display:block; line-height:1.7">${meta.metrics}</div>
+                <div class="industry-choice-meta" style="margin-top:4px; display:block; line-height:1.6">${meta.summary}</div>
             </div>`;
         }).join('');
         grid.querySelectorAll('.industry-choice-card').forEach(card => {
@@ -30919,8 +30927,12 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
   };
   function restoreContentVisibility(){
     const root = document.querySelector('.tier-overview');
-    if(root) root.classList.remove('dna-mode');
+    if(root){
+      root.classList.remove('dna-mode');
+      root.classList.remove('forecast-mode');
+    }
     document.body.classList.remove('dna-content-mode');
+    document.body.classList.remove('forecast-content-mode');
     const cards = document.getElementById('cardsContainer');
     const images = document.getElementById('imageCardsGrid');
     const empty = document.getElementById('noResults');
@@ -30956,8 +30968,26 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
   }
   function installDNAEntry(){
     const root = document.querySelector('.tier-overview');
-    const sw = root?.querySelector('.overview-mode-switch');
-    if(!root || !sw){ setTimeout(installDNAEntry, 300); return; }
+    if(!root){ setTimeout(installDNAEntry, 300); return; }
+    root.classList.add('overview-card-tabs');
+    const head = root.querySelector(':scope > .overview-head') || root.querySelector('.overview-head');
+    let sw = root.querySelector(':scope > .overview-mode-switch') || root.querySelector('.overview-mode-switch');
+    if(sw && sw.parentElement !== root){
+      if(head && head.parentElement === root) root.insertBefore(sw, head);
+      else root.prepend(sw);
+    }
+    if(!sw){
+      sw = document.createElement('div');
+      sw.className = 'overview-mode-switch';
+      sw.innerHTML = `
+        <button class="overview-mode-btn active" data-mode="dna" data-desc="先看分品类爆款公式，再看开场、场景、人物、权益等高效要素">本期爆款创意要素拆解</button>
+        <button class="overview-mode-btn" data-mode="running" data-desc="查看本期跑量结构、品类与素材类型，并下钻到详细素材">本期跑量详细素材参考</button>
+        <button class="overview-mode-btn" data-mode="forecast" data-desc="点击跳转微信生态热点话题灵感">微信生态热点话题灵感</button>
+      `;
+      if(head && head.parentElement === root) root.insertBefore(sw, head);
+      else root.prepend(sw);
+    }
+    if(!sw){ setTimeout(installDNAEntry, 300); return; }
     let panel = document.getElementById('dnaDefaultPanel');
     if(!panel){
       panel = document.createElement('section');
@@ -30975,8 +31005,31 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
     }
     const runningBtn = sw.querySelector('[data-mode="running"]');
     const forecastBtn = sw.querySelector('[data-mode="forecast"]');
+    const hotspotLink = 'https://hotspot.dacongming.chat/';
+    function updateModeButtons(mode){
+      document.querySelectorAll('.overview-mode-btn').forEach(btn=>{
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+    }
     if(runningBtn){ runningBtn.textContent = '本期跑量详细素材参考'; runningBtn.dataset.desc = '查看本期跑量结构、品类与素材类型，并下钻到详细素材'; }
     if(forecastBtn){ forecastBtn.textContent = '微信生态热点话题灵感'; forecastBtn.dataset.desc = '点击跳转微信生态热点话题灵感'; }
+    sw.querySelectorAll('.overview-mode-btn').forEach(btn=>{
+      if(btn.dataset.modeDirectBound) return;
+      btn.dataset.modeDirectBound = '1';
+      btn.addEventListener('click', e=>{
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if(btn.dataset.mode === 'forecast'){
+          window.setMode('forecast');
+          return;
+        }
+        window.setMode(btn.dataset.mode === 'running' ? 'running' : 'dna');
+      }, true);
+    });
+    const legacyForecast = document.getElementById('hotspotForecastPanel');
+    if(legacyForecast){ legacyForecast.style.display = 'none'; legacyForecast.innerHTML = ''; }
+    const legacyRadar = document.getElementById('hotspotRadarPanel');
+    if(legacyRadar){ legacyRadar.remove(); }
     const originalSetMode = window.__dnaOriginalSetMode || window.setMode;
     window.__dnaOriginalSetMode = originalSetMode;
     window.setMode = function(mode){
@@ -30987,25 +31040,37 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
         root.classList.remove('forecast-mode');
         document.body.classList.remove('forecast-content-mode');
         document.body.classList.add('dna-content-mode');
-        document.querySelectorAll('.overview-mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode === 'dna'));
+        updateModeButtons('dna');
         return;
       }
       preferLatestDate();
       restoreContentVisibility();
+      if(mode === 'forecast'){
+        updateModeButtons('forecast');
+        window.open(hotspotLink, '_blank', 'noopener');
+        return;
+      }
+      updateModeButtons('running');
       if(typeof originalSetMode === 'function') originalSetMode(mode);
     };
-    sw.addEventListener('click', e=>{
-      const b = e.target.closest('.overview-mode-btn');
-      if(!b) return;
-      if(b.dataset.mode === 'dna'){
+    if(!sw.dataset.dnaBound){
+      sw.dataset.dnaBound = '1';
+      sw.addEventListener('click', e=>{
+        const b = e.target.closest('.overview-mode-btn');
+        if(!b) return;
         e.preventDefault();
         e.stopImmediatePropagation();
-        window.setMode('dna');
-        return;
-      }
-      preferLatestDate();
-      restoreContentVisibility();
-    }, true);
+        if(b.dataset.mode === 'dna'){
+          window.setMode('dna');
+          return;
+        }
+        if(b.dataset.mode === 'forecast'){
+          window.setMode('forecast');
+          return;
+        }
+        window.setMode('running');
+      }, true);
+    }
     const industryFilter = document.getElementById('industryFilter');
     if(industryFilter && !industryFilter.dataset.dnaBound){
       industryFilter.dataset.dnaBound = '1';
@@ -31181,7 +31246,7 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
 <!-- HOTSPOT_LINK_AND_VARIANTS_V2_START -->
 <script>
 (()=>{
- const HOTSPOT_URL='https://hotspot.dacongming.chat/%E5%A7%90';
+ const HOTSPOT_URL='https://hotspot.dacongming.chat/';
  function install(){
    const root=document.querySelector('.tier-overview');
    if(!root) return;
@@ -31226,10 +31291,18 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
 .feature-dimension-card{border:1px solid #dfeee8;border-radius:14px;background:#fbfffd;padding:12px}
 .feature-dimension-card h4{margin:0 0 8px;color:#19352f;font-size:15px}
 @media(max-width:980px){.feature-dimension-grid{grid-template-columns:1fr}}
+.overview-mode-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 18px;width:100%}
+.overview-mode-btn{appearance:none;border:1px solid #d8ebe4;background:#fff;color:#5f7770;border-radius:18px;padding:16px 18px;text-align:left;font-size:18px;font-weight:900;cursor:pointer;transition:all .2s ease;box-shadow:0 8px 22px rgba(67,145,118,.08);min-height:92px;position:relative;overflow:hidden;line-height:1.35;width:100%}
+.overview-mode-btn::after{content:attr(data-desc);display:block;margin-top:8px;font-size:12px;font-weight:500;line-height:1.6;color:#7b928b}
+.overview-mode-btn:hover{transform:translateY(-2px);border-color:#99dac9;color:#19352f;box-shadow:0 14px 30px rgba(66,184,131,.13)}
+.overview-mode-btn.active{background:linear-gradient(135deg,#effaf5 0%,#f8fff7 100%);border-color:#42b883;color:#19352f;box-shadow:0 16px 34px rgba(66,184,131,.16)}
+.overview-mode-btn.active::before{content:'当前查看';position:absolute;right:14px;top:12px;font-size:11px;color:#1f9e75;background:#e2f6ec;border:1px solid #bce8d4;border-radius:999px;padding:2px 8px;font-weight:800}
+.tier-overview.overview-card-tabs>.overview-head{display:none!important}
 .tier-overview.dna-mode .overview-grid,.tier-overview.dna-mode #filterState,.tier-overview.dna-mode .hotspot-forecast-panel{display:none!important}
 body.dna-content-mode #cardsContainer,body.dna-content-mode #imageCardsGrid,body.dna-content-mode #noResults{display:none!important}
 .tier-overview.dna-mode .dna-default-panel{display:block}
 .dna-default-panel{display:none;margin:0 0 18px}
+@media(max-width:980px){.overview-mode-switch{grid-template-columns:1fr}}
 .dna-default-hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;background:#f7fffb;border:1px solid #d8ebe4;border-radius:18px;padding:20px;margin-bottom:14px}
 .dna-default-hero h2{margin:0;color:#19352f;font-size:22px}
 .dna-default-hero p{margin:7px 0 0;color:#60776e;line-height:1.65;font-size:13px;max-width:700px}
@@ -31304,8 +31377,12 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
   };
   function restoreContentVisibility(){
     const root = document.querySelector('.tier-overview');
-    if(root) root.classList.remove('dna-mode');
+    if(root){
+      root.classList.remove('dna-mode');
+      root.classList.remove('forecast-mode');
+    }
     document.body.classList.remove('dna-content-mode');
+    document.body.classList.remove('forecast-content-mode');
     const cards = document.getElementById('cardsContainer');
     const images = document.getElementById('imageCardsGrid');
     const empty = document.getElementById('noResults');
@@ -31341,8 +31418,26 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
   }
   function installDNAEntry(){
     const root = document.querySelector('.tier-overview');
-    const sw = root?.querySelector('.overview-mode-switch');
-    if(!root || !sw){ setTimeout(installDNAEntry, 300); return; }
+    if(!root){ setTimeout(installDNAEntry, 300); return; }
+    root.classList.add('overview-card-tabs');
+    const head = root.querySelector(':scope > .overview-head') || root.querySelector('.overview-head');
+    let sw = root.querySelector(':scope > .overview-mode-switch') || root.querySelector('.overview-mode-switch');
+    if(sw && sw.parentElement !== root){
+      if(head && head.parentElement === root) root.insertBefore(sw, head);
+      else root.prepend(sw);
+    }
+    if(!sw){
+      sw = document.createElement('div');
+      sw.className = 'overview-mode-switch';
+      sw.innerHTML = `
+        <button class="overview-mode-btn active" data-mode="dna" data-desc="先看分品类爆款公式，再看开场、场景、人物、权益等高效要素">本期爆款创意要素拆解</button>
+        <button class="overview-mode-btn" data-mode="running" data-desc="查看本期跑量结构、品类与素材类型，并下钻到详细素材">本期跑量详细素材参考</button>
+        <button class="overview-mode-btn" data-mode="forecast" data-desc="点击跳转微信生态热点话题灵感">微信生态热点话题灵感</button>
+      `;
+      if(head && head.parentElement === root) root.insertBefore(sw, head);
+      else root.prepend(sw);
+    }
+    if(!sw){ setTimeout(installDNAEntry, 300); return; }
     let panel = document.getElementById('dnaDefaultPanel');
     if(!panel){
       panel = document.createElement('section');
@@ -31360,8 +31455,31 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
     }
     const runningBtn = sw.querySelector('[data-mode="running"]');
     const forecastBtn = sw.querySelector('[data-mode="forecast"]');
+    const hotspotLink = 'https://hotspot.dacongming.chat/';
+    function updateModeButtons(mode){
+      document.querySelectorAll('.overview-mode-btn').forEach(btn=>{
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+    }
     if(runningBtn){ runningBtn.textContent = '本期跑量详细素材参考'; runningBtn.dataset.desc = '查看本期跑量结构、品类与素材类型，并下钻到详细素材'; }
     if(forecastBtn){ forecastBtn.textContent = '微信生态热点话题灵感'; forecastBtn.dataset.desc = '点击跳转微信生态热点话题灵感'; }
+    sw.querySelectorAll('.overview-mode-btn').forEach(btn=>{
+      if(btn.dataset.modeDirectBound) return;
+      btn.dataset.modeDirectBound = '1';
+      btn.addEventListener('click', e=>{
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if(btn.dataset.mode === 'forecast'){
+          window.setMode('forecast');
+          return;
+        }
+        window.setMode(btn.dataset.mode === 'running' ? 'running' : 'dna');
+      }, true);
+    });
+    const legacyForecast = document.getElementById('hotspotForecastPanel');
+    if(legacyForecast){ legacyForecast.style.display = 'none'; legacyForecast.innerHTML = ''; }
+    const legacyRadar = document.getElementById('hotspotRadarPanel');
+    if(legacyRadar){ legacyRadar.remove(); }
     const originalSetMode = window.__dnaOriginalSetMode || window.setMode;
     window.__dnaOriginalSetMode = originalSetMode;
     window.setMode = function(mode){
@@ -31372,25 +31490,37 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
         root.classList.remove('forecast-mode');
         document.body.classList.remove('forecast-content-mode');
         document.body.classList.add('dna-content-mode');
-        document.querySelectorAll('.overview-mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode === 'dna'));
+        updateModeButtons('dna');
         return;
       }
       preferLatestDate();
       restoreContentVisibility();
+      if(mode === 'forecast'){
+        updateModeButtons('forecast');
+        window.open(hotspotLink, '_blank', 'noopener');
+        return;
+      }
+      updateModeButtons('running');
       if(typeof originalSetMode === 'function') originalSetMode(mode);
     };
-    sw.addEventListener('click', e=>{
-      const b = e.target.closest('.overview-mode-btn');
-      if(!b) return;
-      if(b.dataset.mode === 'dna'){
+    if(!sw.dataset.dnaBound){
+      sw.dataset.dnaBound = '1';
+      sw.addEventListener('click', e=>{
+        const b = e.target.closest('.overview-mode-btn');
+        if(!b) return;
         e.preventDefault();
         e.stopImmediatePropagation();
-        window.setMode('dna');
-        return;
-      }
-      preferLatestDate();
-      restoreContentVisibility();
-    }, true);
+        if(b.dataset.mode === 'dna'){
+          window.setMode('dna');
+          return;
+        }
+        if(b.dataset.mode === 'forecast'){
+          window.setMode('forecast');
+          return;
+        }
+        window.setMode('running');
+      }, true);
+    }
     const industryFilter = document.getElementById('industryFilter');
     if(industryFilter && !industryFilter.dataset.dnaBound){
       industryFilter.dataset.dnaBound = '1';
