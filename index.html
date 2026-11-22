@@ -27442,9 +27442,9 @@ body {
 .overview-mode-btn.active{background:linear-gradient(135deg,#effaf5 0%,#f8fff7 100%);border-color:#42b883;color:#19352f;box-shadow:0 16px 34px rgba(66,184,131,.16)}
 .overview-mode-btn.active::before{content:'当前查看';position:absolute;right:14px;top:12px;font-size:11px;color:#1f9e75;background:#e2f6ec;border:1px solid #bce8d4;border-radius:999px;padding:2px 8px;font-weight:800}
 .overview-mode-btn[data-mode="forecast"]{overflow:visible}
-.double11-alert{position:absolute;right:-6px;top:-10px;z-index:3;display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#ff5b5b 0%,#e61f24 100%);color:#fff;font-size:11px;font-weight:900;line-height:1.2;padding:5px 10px;border-radius:999px;box-shadow:0 6px 16px rgba(230,31,36,.45);border:1.5px solid #fff;white-space:nowrap;animation:double11Pulse 1.6s ease-in-out infinite;pointer-events:none}
-.double11-alert::before{content:'🔥';font-size:12px;line-height:1}
-@keyframes double11Pulse{0%,100%{transform:scale(1);box-shadow:0 6px 16px rgba(230,31,36,.45)}50%{transform:scale(1.08);box-shadow:0 8px 22px rgba(230,31,36,.7)}}
+.double11-alert{position:absolute;right:-6px;top:-10px;z-index:3;display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#8ed6ff 0%,#2a7fc9 100%);color:#fff;font-size:11px;font-weight:900;line-height:1.2;padding:5px 10px;border-radius:999px;box-shadow:0 6px 16px rgba(42,127,201,.45);border:1.5px solid #fff;white-space:nowrap;animation:double11Pulse 1.6s ease-in-out infinite;pointer-events:none}
+.double11-alert::before{content:'❄';font-size:12px;line-height:1}
+@keyframes double11Pulse{0%,100%{transform:scale(1);box-shadow:0 6px 16px rgba(42,127,201,.45)}50%{transform:scale(1.08);box-shadow:0 8px 22px rgba(42,127,201,.7)}}
 @media(max-width:980px){.double11-alert{font-size:10px;padding:4px 8px;top:-8px;right:-4px}}
 .tier-overview.overview-card-tabs>.overview-head{display:none!important}
 .tier-overview.dna-mode .overview-grid,.tier-overview.dna-mode #filterState,.tier-overview.dna-mode .hotspot-forecast-panel{display:none!important}
@@ -27579,7 +27579,7 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
       sw.innerHTML = `
         <button class="overview-mode-btn active" data-mode="dna" data-desc="先看分品类爆款公式，再看开场、场景、人物、权益等高效要素">本期爆款创意要素拆解</button>
         <button class="overview-mode-btn" data-mode="running" data-desc="查看本期跑量结构、品类与素材类型，并下钻到详细素材">本期跑量详细素材参考</button>
-        <button class="overview-mode-btn" data-mode="forecast" data-desc="点击跳转微信生态热点话题灵感">微信生态热点话题灵感<span class="double11-alert">11月热点追踪</span></button>
+        <button class="overview-mode-btn" data-mode="forecast" data-desc="点击跳转微信生态热点话题灵感">微信生态热点话题灵感<span class="double11-alert">冬藏季热点追踪</span></button>
       `;
       if(head && head.parentElement === root) root.insertBefore(sw, head);
       else root.prepend(sw);
@@ -27609,7 +27609,7 @@ window.DIAG_FEATURE_LABELS = {hook:'开场钩子',emotion:'内容情绪',form:'�
       });
     }
     if(runningBtn){ runningBtn.textContent = '本期跑量详细素材参考'; runningBtn.dataset.desc = '查看本期跑量结构、品类与素材类型，并下钻到详细素材'; }
-    if(forecastBtn){ forecastBtn.dataset.desc = '点击跳转微信生态热点话题灵感'; if(!forecastBtn.querySelector('.double11-alert')){ const txt = document.createTextNode('微信生态热点话题灵感'); forecastBtn.textContent = ''; forecastBtn.appendChild(txt); const badge = document.createElement('span'); badge.className = 'double11-alert'; badge.textContent = '11月热点追踪'; forecastBtn.appendChild(badge); } }
+    if(forecastBtn){ forecastBtn.dataset.desc = '点击跳转微信生态热点话题灵感'; if(!forecastBtn.querySelector('.double11-alert')){ const txt = document.createTextNode('微信生态热点话题灵感'); forecastBtn.textContent = ''; forecastBtn.appendChild(txt); const badge = document.createElement('span'); badge.className = 'double11-alert'; badge.textContent = '冬藏季热点追踪'; forecastBtn.appendChild(badge); } }
     sw.querySelectorAll('.overview-mode-btn').forEach(btn=>{
       if(btn.dataset.modeDirectBound) return;
       btn.dataset.modeDirectBound = '1';
